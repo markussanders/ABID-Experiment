@@ -9,13 +9,26 @@ const displayLoader = () => {
     setTimeout(() => undefined, 2000);
 };
 
-const displayPrompts = () => {
-    const prompts = document.querySelector('.control');
-    prompts.style.display = 'block';
+const displayPromptsAndCounter = () => {
+    const overlay = document.querySelector('.overlay-hidden');
+    overlay.className = 'overlay-visible fadeOut';
+    setTimeout(() => {
+        overlay.className = 'overlay-hidden';
+    }, 5000);
+};
+
+const updateCounter = (index, audioImageTitles) => {
+    const title = document.getElementById('title');
+    let formattedTitle = audioImageTitles[index].replace('-', ' ');
+    title.innerHTML = `${formattedTitle}`;
+    //
+    const count = document.getElementById('count');
+    count.innerHTML = `${++index} / ${audioImageTitles.length}`;
 };
 
 const handleStopPlaySequence = audio => {
     if (audio.isPlaying()) {
+        displayPromptsAndCounter();
         audio.pause();
     } else {
         audio.play();
@@ -35,7 +48,6 @@ const stopAudioAndResetCanvas = (audio, p) => {
     audio.stop();
     audio.dispose();
     p.remove();
-    displayPrompts();
 };
 
 const runGreenTea = (bass, mapBass, mid, mapMid, shader, p, fft) => {
@@ -68,7 +80,7 @@ const runDarkOcean = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, sha
     shader.setUniform('u_lowmid', mapLowMid);
 };
 
-const runSucioBlanco = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
+const runCollage = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
     bass = fft.getEnergy('bass');
     treble = fft.getEnergy('treble');
     mid = fft.getEnergy('highMid');
@@ -110,7 +122,7 @@ const runNoise = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader,
     mid = fft.getEnergy('highMid');
     lowMid = fft.getEnergy('mid');
 
-    mapBass = p.map(bass, 0, 255, 0.0, 255);
+    mapBass = p.map(treble, 0, 255, 0.0, 255);
     mapMid = p.map(mid, 0, 50, 0.0, 0.05);
     mapLowMid = p.map(lowMid, 0, 20, 0.0, 20);
 

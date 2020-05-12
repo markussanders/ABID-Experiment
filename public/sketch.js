@@ -10,7 +10,7 @@ const setAudioAndImage = () => {
     'liquid',
     'dark-ocean',
     'green-tea',
-    'sucio-blanco',
+    'collage',
     'noise',
     'solar',
     'algorithms'
@@ -20,7 +20,9 @@ const setAudioAndImage = () => {
   audioLink = 'audio/' + audioImageTitles[index] + '.mp3';
   imageLink = 'images/' + audioImageTitles[index] + '.jpg';
 
+  updateCounter(index, audioImageTitles);  
   new p5(sketch);
+  displayPromptsAndCounter();
 } 
 
 const sketch = p => {
@@ -64,11 +66,12 @@ const sketch = p => {
   };
 
   document.addEventListener('keydown', event => {
-    console.log('CLICKED', event.keyCode)
     if (event.keyCode === 32) handleStopPlaySequence(audio);
   });
 
-  document.addEventListener('mousemove', () => displayPrompts());
+  // document.addEventListener('mousemove', () => {
+  //   displayPromptsAndCounter();
+  // });
 
   p.draw = () => {
     fft.analyze();
@@ -85,7 +88,7 @@ const sketch = p => {
         runGreenTea(bass, mapBass, mid, mapMid, shader, p, fft);
         break;
       case 3:
-        runSucioBlanco(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
+        runCollage(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
         break;
       case 4:
         runNoise(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);

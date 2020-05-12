@@ -3,6 +3,57 @@ body {
     overflow: hidden;
 }
 
+.overlay-hidden {
+   visibility: hidden;
+}
+
+.overlay-visible {
+    visibility: visible;
+}
+
+.prompt {
+    color: rgb(250, 250, 250);
+    background-color: rgba(0, 0, 0, 0.837);
+    border-radius: 3px;
+}
+
+.fadeIn {
+    animation: fadeIn ease 15s;
+    -webkit-animation: fadeIn ease 15s;
+    -moz-animation: fadeIn ease 15s;
+    -o-animation: fadeIn ease 15s;
+    -ms-animation: fadeIn ease 15s;
+}
+
+@keyframes fadeIn {
+    0% {opacity: 0}
+    100% {opacity: 1}
+}
+
+/* 
+.fadeOut {
+    animation: fadeOut ease 5s;
+    -webkit-animation: fadeOut ease 5s;
+    -moz-animation: fadeOut ease 5s;
+    -o-animation: fadeOut ease 5s;
+    -ms-animation: fadeOut ease 5s;
+}
+
+@keyframes fadeOut {
+    0% {opacity: 1}
+    100% {opacity: 0}
+} */
+
+.counter {
+    position: absolute;
+    z-index: 1;
+    top: 1vh;
+    right: 1vw;
+    color: rgb(250, 250, 250);
+    background-color: rgba(0, 0, 0, 0.837);
+    border-radius: 3px;
+}
+
 .control {
     position: absolute;
     z-index: 1;
@@ -12,25 +63,6 @@ body {
     flex-direction: column;
     justify-content: center;
     max-width: 20vw;
-    animation: fade 10s ease;
-    -webkit-animation: fade 10s ease;
-    -moz-animation: fade 10s ease;
-    -o-animation: fade 10s ease;
-    -ms-animation: fade 10s ease;
-    background-color: black;
-}
-
-@keyframes fade {
-  0%,100% { opacity: 0 }
-  50% { opacity: 1 }
-}
-
-.prompt {
-    color: grey;
-}
-
-.button {
-    color: grey;
 }
 
 canvas {
@@ -39,16 +71,6 @@ canvas {
     -moz-animation: fadeIn ease 10s;
     -o-animation: fadeIn ease 10s;
     -ms-animation: fadeIn ease 10s;
-}
-
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
 }
 
 .loader-screen {
