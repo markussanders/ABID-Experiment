@@ -1,0 +1,16 @@
+{
+    "name": "sockets_p5",
+    "version": "1.0.0",
+    "description": "Audio-based Image Distortion",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "Markus Sanders",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.17.1",
+        "p5": "^1.0.0",
+        "socket.io": "^1.7.4"
+    }
+}
