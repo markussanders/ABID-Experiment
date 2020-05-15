@@ -169,3 +169,21 @@ const runAlgorithms = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, sh
     shader.setUniform('u_mid', mapMid);
     shader.setUniform('u_lowmid', mapLowMid);
 };
+
+const runDMT = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
+    bass = fft.getEnergy("bass");
+    treble = fft.getEnergy('treble');
+    mid = fft.getEnergy("mid");
+    lowMid = fft.getEnergy('mid');
+
+    mapBass = p.map(bass, 0, 255, 10, 255);
+    mapMid = p.map(mid, 0, 255, 0.0, 0.008);
+    mapLowMid = p.map(lowMid, 0, 20, 0.0, 0.2);
+
+    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+
+    shader.setUniform('u_time', tc);
+    shader.setUniform('u_bass', mapBass);
+    shader.setUniform('u_mid', mapMid);
+    shader.setUniform('u_lowmid', mapLowMid);
+};

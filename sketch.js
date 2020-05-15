@@ -1,3 +1,4 @@
+/* eslint-disable complexity */
 let audioLink, imageLink;
 let index;
 let audioImageTitles;
@@ -13,17 +14,18 @@ const setAudioAndImage = () => {
     'collage',
     'noise',
     'solar',
-    'algorithms'
+    'algorithms',
+    'dmt'
   ];
 
   if (audioImageTitles[index] === undefined) index = 0;
   audioLink = 'audio/' + audioImageTitles[index] + '.mp3';
   imageLink = 'images/' + audioImageTitles[index] + '.jpg';
 
-  updateCounter(index, audioImageTitles);  
+  updateCounter(index, audioImageTitles);
   new p5(sketch);
   displayPromptsAndCounter();
-} 
+}
 
 const sketch = p => {
   let shader, img, d_map, fft, audio;
@@ -46,7 +48,7 @@ const sketch = p => {
 
     fft = new p5.FFT();
   };
- 
+
   p.keyPressed = () => {
     if (event.keyCode === p.LEFT_ARROW) {
       setTimeout(() => {
@@ -68,10 +70,6 @@ const sketch = p => {
   document.addEventListener('keydown', event => {
     if (event.keyCode === 32) handleStopPlaySequence(audio);
   });
-
-  // document.addEventListener('mousemove', () => {
-  //   displayPromptsAndCounter();
-  // });
 
   p.draw = () => {
     fft.analyze();
@@ -99,7 +97,10 @@ const sketch = p => {
       case 6:
         runAlgorithms(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
         break;
-      default: 
+      case 7:
+        runDMT(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
+        break;
+      default:
         location.reload();
     }
     p.rect(0, 0, p.width, p.height);
