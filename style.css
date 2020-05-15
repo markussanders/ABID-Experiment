@@ -138,3 +138,53 @@ h1.loader {
 .loader span:nth-child(7) {
     animation-delay: 0.90s;
 }
+
+
+/* inhibit mobile usage */
+
+.alert-screen {
+    display: none;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+}
+
+@media screen and (max-width: 1300px) {
+
+  html {
+    overflow: hidden;
+  }
+
+  .alert-screen {
+    display: block;
+    max-width: 100vh;
+    max-height: 100vh;
+  }
+
+  .alert-messages {
+    margin-top: 40vh;
+    margin-bottom: auto;
+  }
+
+  .alert-message {
+    font-size: 1em;
+    color: white;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 80vw;
+  }
+
+  .overlay-visible {
+    visibility: hidden;
+  }
+
+  .loader-screen {
+    visibility: hidden;
+  }
+
+  canvas {
+    visibility: hidden;
+  }
+}
