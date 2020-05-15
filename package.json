@@ -1,5 +1,5 @@
 {
-    "name": "ABID Experiment",
+    "name": "ABID-Experiment",
     "version": "1.0.0",
     "description": "Audio-Based Image Distortion Experiment",
     "main": "server.js",
