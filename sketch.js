@@ -1,113 +1,235 @@
-/* eslint-disable complexity */
-let audioLink, imageLink;
-let index;
-let audioImageTitles;
+/* global p5, ABIDHelpers */
 
+(() => {
+    const tracks = [
+        { slug: 'liquid' },
+        { slug: 'dark-ocean' },
+        { slug: 'green-tea' },
+        { slug: 'collage' },
+        { slug: 'noise' },
+        { slug: 'solar' },
+        { slug: 'algorithms' },
+        { slug: 'dmt', title: 'DMT' }
+    ];
 
-document.addEventListener('DOMContentLoaded', () => setAudioAndImage());
+    let currentTrackIndex = 0;
+    let currentP5;
+    let currentAudio;
+    let isAudioReady = false;
+    let isChangingTrack = false;
 
-const setAudioAndImage = () => {
-  audioImageTitles = [
-    'liquid',
-    'dark-ocean',
-    'green-tea',
-    'collage',
-    'noise',
-    'solar',
-    'algorithms',
-    'dmt'
-  ];
+    const getCurrentTrack = () => tracks[currentTrackIndex];
+    const getAssetPath = (folder, extension) => `${folder}/${getCurrentTrack().slug}.${extension}`;
 
-  if (audioImageTitles[index] === undefined) index = 0;
-  audioLink = 'audio/' + audioImageTitles[index] + '.mp3';
-  imageLink = 'images/' + audioImageTitles[index] + '.jpg';
+    const normalizeHash = () => window.location.hash.replace('#', '').trim().toLowerCase();
 
-  updateCounter(index, audioImageTitles);
-  new p5(sketch);
-  displayPromptsAndCounter();
-}
+    const setInitialTrackFromHash = () => {
+        const hash = normalizeHash();
+        const hashIndex = tracks.findIndex(track => track.slug === hash);
 
-const sketch = p => {
-  let shader, img, d_map, fft, audio;
+        if (hashIndex >= 0) currentTrackIndex = hashIndex;
+    };
 
-  p.preload = () => {
-    audio = p.loadSound(audioLink, null, displayLoader());
-    img = p.loadImage(imageLink);
-    shader = p.loadShader('shaders/base.vert', `shaders/${audioImageTitles[index]}.frag`);
-    d_map = p.loadImage('images/clouds.jpg');
-  };
+    const updateHash = () => {
+        const slug = getCurrentTrack().slug;
 
-  p.setup = () => {
-    hideLoader();
+        if (normalizeHash() === slug || !window.history?.replaceState) return;
 
-    p.pixelDensity(1);
-    p.createCanvas(p.windowWidth, p.windowHeight, p.WEBGL);
+        window.history.replaceState(null, '', `#${slug}`);
+    };
 
-    p.shader(shader);
-    setShaderUniforms(shader, p, img, d_map);
+    const ensureAudioContext = () => {
+        const handleStartError = error => {
+            console.warn('Could not start the audio context yet.', error);
+        };
 
-    fft = new p5.FFT();
-  };
+        if (currentP5 && typeof currentP5.userStartAudio === 'function') {
+            const startResult = currentP5.userStartAudio();
 
-  p.keyPressed = () => {
-    if (event.keyCode === p.LEFT_ARROW) {
-      setTimeout(() => {
-        stopAudioAndResetCanvas(audio, p);
-        index === 0 ? index = audioImageTitles.length - 1 : index--;
-        setAudioAndImage();
-      }, 500);
+            if (startResult && typeof startResult.catch === 'function') {
+                startResult.catch(handleStartError);
+            }
 
-    } else if (event.keyCode === p.RIGHT_ARROW) {
-      setTimeout(() => {
-        stopAudioAndResetCanvas(audio, p);
-        index === audioImageTitles.length - 1 ? index = 0 : index++;
-        setAudioAndImage();
-      }, 500);
+            return;
+        }
 
-    }
-  };
+        if (typeof window.userStartAudio === 'function') {
+            const startResult = window.userStartAudio();
 
-  document.addEventListener('keydown', event => {
-    if (event.keyCode === 32) handleStopPlaySequence(audio);
-  });
+            if (startResult && typeof startResult.catch === 'function') {
+                startResult.catch(handleStartError);
+            }
+        }
+    };
 
-  p.draw = () => {
-    fft.analyze();
-    let bass, mapBass, mid, mapMid, treble, lowMid, mapLowMid;
+    const disposeCurrentSketch = () => {
+        if (currentAudio) {
+            currentAudio.stop();
 
-    switch (index) {
-      case 0:
-        runLiquid(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-      break;
-      case 1:
-        runDarkOcean(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      case 2:
-        runGreenTea(bass, mapBass, mid, mapMid, shader, p, fft);
-        break;
-      case 3:
-        runCollage(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      case 4:
-        runNoise(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      case 5:
-        runSolar(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      case 6:
-        runAlgorithms(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      case 7:
-        runDMT(bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft);
-        break;
-      default:
-        location.reload();
-    }
-    p.rect(0, 0, p.width, p.height);
-  };
+            if (typeof currentAudio.dispose === 'function') {
+                currentAudio.dispose();
+            }
 
-  p.windowResized = () => {
-    p.resizeCanvas(p.windowWidth, p.windowHeight);
-    shader.setUniform('u_resolution', [p.windowWidth, p.windowHeight]);
-  };
-};
+            currentAudio = undefined;
+        }
+
+        if (currentP5) {
+            currentP5.remove();
+            currentP5 = undefined;
+        }
+
+        ABIDHelpers.setPlayingState(false);
+        ABIDHelpers.setAudioReady(false);
+        isAudioReady = false;
+    };
+
+    const startCurrentSketch = () => {
+        ABIDHelpers.clearStatusMessage();
+        ABIDHelpers.showLoader();
+        ABIDHelpers.setAudioReady(false);
+        ABIDHelpers.updateCounter(currentTrackIndex, tracks);
+        ABIDHelpers.displayPromptsAndCounter();
+        updateHash();
+
+        currentP5 = new p5(createSketch);
+    };
+
+    const changeTrack = direction => {
+        if (isChangingTrack) return;
+
+        isChangingTrack = true;
+        disposeCurrentSketch();
+        currentTrackIndex = (currentTrackIndex + direction + tracks.length) % tracks.length;
+        startCurrentSketch();
+
+        window.setTimeout(() => {
+            isChangingTrack = false;
+        }, 250);
+    };
+
+    const togglePlayback = async () => {
+        if (!currentAudio || !isAudioReady) {
+            ABIDHelpers.displayPromptsAndCounter();
+            return;
+        }
+
+        ensureAudioContext();
+
+        if (currentAudio.isPlaying()) {
+            currentAudio.pause();
+            ABIDHelpers.setPlayingState(false);
+            ABIDHelpers.displayPromptsAndCounter();
+            return;
+        }
+
+        currentAudio.play();
+        ABIDHelpers.setPlayingState(true);
+    };
+
+    const handleKeyDown = event => {
+        if (event.repeat) return;
+
+        switch (event.code) {
+            case 'ArrowLeft':
+                event.preventDefault();
+                changeTrack(-1);
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                changeTrack(1);
+                break;
+            case 'Space':
+                event.preventDefault();
+                togglePlayback();
+                break;
+            default:
+                break;
+        }
+    };
+
+    const handleControlClick = event => {
+        if (!(event.target instanceof Element)) return;
+
+        const button = event.target.closest('[data-action]');
+
+        if (!button) return;
+
+        const action = button.dataset.action;
+
+        if (action === 'previous') changeTrack(-1);
+        if (action === 'next') changeTrack(1);
+        if (action === 'toggle') togglePlayback();
+    };
+
+    const createSketch = p => {
+        let shader;
+        let img;
+        let dMap;
+        let fft;
+        let audio;
+
+        p.preload = () => {
+            const track = getCurrentTrack();
+            isAudioReady = false;
+
+            audio = p.loadSound(
+                getAssetPath('audio', 'mp3'),
+                () => {
+                    currentAudio = audio;
+                    isAudioReady = true;
+                    ABIDHelpers.setAudioReady(true);
+                },
+                error => ABIDHelpers.showLoadError(track, error)
+            );
+            img = p.loadImage(getAssetPath('images', 'jpg'));
+            shader = p.loadShader('shaders/base.vert', `shaders/${track.slug}.frag`);
+            dMap = p.loadImage('images/clouds.jpg');
+        };
+
+        p.setup = () => {
+            const canvas = p.createCanvas(p.windowWidth, p.windowHeight, p.WEBGL);
+            canvas.parent('experience');
+
+            currentAudio = audio;
+            isAudioReady = true;
+            ABIDHelpers.setAudioReady(true);
+            currentAudio.setVolume(0.9);
+
+            p.pixelDensity(1);
+            p.noStroke();
+            p.shader(shader);
+
+            ABIDHelpers.setShaderUniforms(shader, p, img, dMap);
+            ABIDHelpers.hideLoader();
+            ABIDHelpers.dismissInitialControls();
+
+            fft = new p5.FFT(0.8, 1024);
+            fft.setInput(audio);
+        };
+
+        p.draw = () => {
+            if (!fft || !audio?.isLoaded()) return;
+
+            fft.analyze();
+
+            const runner = ABIDHelpers.shaderRunners[getCurrentTrack().slug];
+            runner({ shader, audio, p, fft });
+
+            p.rect(0, 0, p.width, p.height);
+        };
+
+        p.windowResized = () => {
+            if (!shader) return;
+
+            p.resizeCanvas(p.windowWidth, p.windowHeight);
+            shader.setUniform('u_resolution', [p.windowWidth, p.windowHeight]);
+        };
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setInitialTrackFromHash();
+        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener('click', handleControlClick);
+        startCurrentSketch();
+    });
+})();

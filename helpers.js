@@ -1,189 +1,219 @@
-const hideLoader = () => {
-    const loadScreen = document.querySelector('.loader-screen');
-    loadScreen.style.display = 'none';
-};
+window.ABIDHelpers = (() => {
+    let overlayTimeout;
+    let controlsTimeout;
 
-const displayLoader = () => {
-    const loadScreen = document.querySelector('.loader-screen');
-    loadScreen.style.display = 'block';
-    setTimeout(() => undefined, 2000);
-};
+    const getElement = selector => document.querySelector(selector);
 
-const displayPromptsAndCounter = () => {
-    const overlay = document.querySelector('.overlay-hidden');
-    overlay.className = 'overlay-visible fadeOut';
-    setTimeout(() => {
-        overlay.className = 'overlay-hidden';
-    }, 5000);
-};
+    const showLoader = () => {
+        const loadScreen = getElement('.loader-screen');
 
-const updateCounter = (index, audioImageTitles) => {
-    const title = document.getElementById('title');
-    let formattedTitle = audioImageTitles[index].replace('-', ' ');
-    title.innerHTML = `${formattedTitle}`;
-    //
-    const count = document.getElementById('count');
-    count.innerHTML = `${++index} / ${audioImageTitles.length}`;
-};
+        if (!loadScreen) return;
 
-const handleStopPlaySequence = audio => {
-    if (audio.isPlaying()) {
-        displayPromptsAndCounter();
-        audio.pause();
-    } else {
-        audio.play();
-    }
-};
+        loadScreen.hidden = false;
+        loadScreen.style.display = 'grid';
+    };
 
-const setShaderUniforms = (shader, p, img, d_map) => {
-    shader.setUniform('u_resolution', [p.windowWidth, p.windowHeight]);
-    shader.setUniform('u_texture', img);
-    shader.setUniform('u_tResolution', [img.width, img.height]);
-    shader.setUniform('d_map', d_map);
-    shader.setUniform('img', img);
-    shader.setUniform('texRes', [img.width, img.height]);
-};
+    const hideLoader = () => {
+        const loadScreen = getElement('.loader-screen');
 
-const stopAudioAndResetCanvas = (audio, p) => {
-    audio.stop();
-    audio.dispose();
-    p.remove();
-};
+        if (!loadScreen) return;
 
-const runGreenTea = (bass, mapBass, mid, mapMid, shader, p, fft) => {
-    bass = fft.getEnergy("bass");
-    mid = fft.getEnergy("mid");
+        loadScreen.hidden = true;
+        loadScreen.style.display = 'none';
+    };
 
-    mapBass = p.map(bass, 0, 255, 0.0, 2.0);
-    mapMid = p.map(mid, 0, 255, 0.0, 0.05);
+    const hidePlayerControls = () => {
+        window.clearTimeout(controlsTimeout);
+        getElement('.controls-bar')?.classList.remove('controls-visible');
+    };
 
-    shader.setUniform('u_time', p.frameCount / 20.0);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-};
+    const dismissInitialControls = () => {
+        const controls = getElement('.controls-bar');
 
-const runDarkOcean = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy('bass');
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy('highMid');
-    lowMid = fft.getEnergy('mid');
+        if (!controls?.classList.contains('controls-visible')) return;
 
-    mapBass = p.map(bass, 0, 255, 0.0, 0.04);
-    mapMid = p.map(mid, 0, 30, 0.0, 0.8);
-    mapLowMid = p.map(lowMid, 0, 60, 0.0, 0.4);
+        window.clearTimeout(controlsTimeout);
+        controlsTimeout = window.setTimeout(hidePlayerControls, 5000);
+    };
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+    const displayPromptsAndCounter = (duration = 5000) => {
+        const overlay = getElement('.overlay');
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+        if (!overlay) return;
 
-const runCollage = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy('bass');
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy('highMid');
-    lowMid = fft.getEnergy('mid');
+        window.clearTimeout(overlayTimeout);
+        overlay.classList.remove('overlay-hidden');
+        overlay.classList.add('overlay-visible');
 
-    mapBass = p.map(bass, 0, 255, 0.0, 0.04);
-    mapMid = p.map(mid, 0, 30, 0.0, 0.8);
-    mapLowMid = p.map(lowMid, 0, 60, 0.0, 0.4);
+        if (duration > 0) {
+            overlayTimeout = window.setTimeout(() => {
+                overlay.classList.remove('overlay-visible');
+                overlay.classList.add('overlay-hidden');
+            }, duration);
+        }
+    };
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+    const formatTitle = slug => slug
+        .split('-')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+    const updateCounter = (index, tracks) => {
+        const title = getElement('#title');
+        const count = getElement('#count');
+        const track = tracks[index];
 
-const runLiquid = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy('bass');
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy('highMid');
-    lowMid = fft.getEnergy('mid');
+        if (title) title.textContent = track.title || formatTitle(track.slug);
+        if (count) count.textContent = `${index + 1} / ${tracks.length}`;
+    };
 
-    mapBass = p.map(bass, 0, 255, 0.0, 0.04);
-    mapMid = p.map(mid, 0, 30, 0.0, 0.8);
-    mapLowMid = p.map(lowMid, 0, 60, 0.0, 0.4);
+    const setPlayingState = isPlaying => {
+        const toggleButton = getElement('[data-action="toggle"]');
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+        if (!toggleButton) return;
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+        toggleButton.textContent = isPlaying ? 'Pause' : 'Play';
+        toggleButton.setAttribute('aria-pressed', String(isPlaying));
 
-const runNoise = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy('bass');
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy('highMid');
-    lowMid = fft.getEnergy('mid');
+        if (isPlaying) hidePlayerControls();
+    };
 
-    mapBass = p.map(treble, 0, 255, 0.0, 255);
-    mapMid = p.map(mid, 0, 50, 0.0, 0.05);
-    mapLowMid = p.map(lowMid, 0, 20, 0.0, 20);
+    const setAudioReady = isReady => {
+        const toggleButton = getElement('[data-action="toggle"]');
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+        if (!toggleButton) return;
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};;
+        toggleButton.disabled = !isReady;
 
-const runSolar = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft ) => {
-    bass = fft.getEnergy("bass");
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy("mid");
-    lowMid = fft.getEnergy('mid');
+        if (!isReady) {
+            toggleButton.textContent = 'Loading';
+            toggleButton.setAttribute('aria-pressed', 'false');
+            return;
+        }
 
-    mapBass = p.map(bass, 0, 255, 10, 255);
-    mapMid = p.map(mid, 0, 255, 0.0, 0.005);
-    mapLowMid = p.map(lowMid, 0, 20, 0.0, 0.2);
+        if (toggleButton.textContent === 'Loading') {
+            toggleButton.textContent = 'Play';
+        }
+    };
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+    const setStatusMessage = message => {
+        const controls = getElement('.control');
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+        if (!controls) return;
 
-const runAlgorithms = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy("bass");
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy("mid");
-    lowMid = fft.getEnergy('mid');
+        let status = getElement('[data-status-message]');
 
-    mapBass = p.map(bass, 0, 255, 10, 255);
-    mapMid = p.map(mid, 0, 255, 0.0, 0.008);
-    mapLowMid = p.map(lowMid, 0, 20, 0.0, 0.2);
+        if (!status) {
+            status = document.createElement('span');
+            status.className = 'prompt';
+            status.dataset.statusMessage = 'true';
+            controls.append(status);
+        }
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+        status.textContent = message;
+    };
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+    const showLoadError = (track, error) => {
+        console.error(`Could not load ${track.slug}`, error);
+        hideLoader();
+        setPlayingState(false);
+        setStatusMessage(`Could not load ${track.title || formatTitle(track.slug)}`);
+        displayPromptsAndCounter(0);
+    };
 
-const runDMT = (bass, mapBass, mid, mapMid, lowMid, treble, mapLowMid, shader, audio, p, fft) => {
-    bass = fft.getEnergy("bass");
-    treble = fft.getEnergy('treble');
-    mid = fft.getEnergy("mid");
-    lowMid = fft.getEnergy('mid');
+    const clearStatusMessage = () => {
+        const status = getElement('[data-status-message]');
+        status?.remove();
+    };
 
-    mapBass = p.map(bass, 0, 255, 10, 255);
-    mapMid = p.map(mid, 0, 255, 0.0, 0.008);
-    mapLowMid = p.map(lowMid, 0, 20, 0.0, 0.2);
+    const setShaderUniforms = (shader, p, img, dMap) => {
+        shader.setUniform('u_resolution', [p.windowWidth, p.windowHeight]);
+        shader.setUniform('u_texture', img);
+        shader.setUniform('u_tResolution', [img.width, img.height]);
+        shader.setUniform('d_map', dMap);
+        shader.setUniform('img', img);
+        shader.setUniform('texRes', [img.width, img.height]);
+    };
 
-    const tc = p.map(audio.currentTime(), 0, audio.duration(), 1.0, 1.0);
+    const getLevels = fft => ({
+        bass: fft.getEnergy('bass'),
+        highMid: fft.getEnergy('highMid'),
+        mid: fft.getEnergy('mid'),
+        treble: fft.getEnergy('treble')
+    });
 
-    shader.setUniform('u_time', tc);
-    shader.setUniform('u_bass', mapBass);
-    shader.setUniform('u_mid', mapMid);
-    shader.setUniform('u_lowmid', mapLowMid);
-};
+    const setMappedUniforms = (shader, values) => {
+        Object.entries(values).forEach(([uniform, value]) => {
+            shader.setUniform(uniform, value);
+        });
+    };
+
+    const runSoftDisplacement = ({ shader, p, fft }) => {
+        const { bass, highMid, mid } = getLevels(fft);
+
+        // These shaders use u_time as displacement strength, not playback progress.
+        setMappedUniforms(shader, {
+            u_time: 1,
+            u_bass: p.map(bass, 0, 255, 0, 0.04),
+            u_mid: p.map(highMid, 0, 30, 0, 0.8),
+            u_lowmid: p.map(mid, 0, 60, 0, 0.4)
+        });
+    };
+
+    const runGreenTea = ({ shader, p, fft }) => {
+        const { bass, mid } = getLevels(fft);
+
+        setMappedUniforms(shader, {
+            u_time: p.frameCount / 20,
+            u_bass: p.map(bass, 0, 255, 0, 2),
+            u_mid: p.map(mid, 0, 255, 0, 0.05)
+        });
+    };
+
+    const runNoise = ({ shader, p, fft }) => {
+        const { highMid, mid, treble } = getLevels(fft);
+
+        setMappedUniforms(shader, {
+            u_time: 1,
+            u_bass: Math.max(0.001, p.map(treble, 0, 255, 0, 255)),
+            u_mid: p.map(highMid, 0, 50, 0, 0.05),
+            u_lowmid: p.map(mid, 0, 20, 0, 20)
+        });
+    };
+
+    const runBrightDisplacement = ({ shader, p, fft }, midMax) => {
+        const { bass, mid } = getLevels(fft);
+
+        setMappedUniforms(shader, {
+            u_time: 1,
+            u_bass: p.map(bass, 0, 255, 10, 255),
+            u_mid: p.map(mid, 0, 255, 0, midMax),
+            u_lowmid: p.map(mid, 0, 20, 0, 0.2)
+        });
+    };
+
+    const shaderRunners = {
+        liquid: runSoftDisplacement,
+        'dark-ocean': runSoftDisplacement,
+        'green-tea': runGreenTea,
+        collage: runSoftDisplacement,
+        noise: runNoise,
+        solar: context => runBrightDisplacement(context, 0.005),
+        algorithms: context => runBrightDisplacement(context, 0.008),
+        dmt: context => runBrightDisplacement(context, 0.008)
+    };
+
+    return {
+        clearStatusMessage,
+        dismissInitialControls,
+        displayPromptsAndCounter,
+        hideLoader,
+        setAudioReady,
+        setPlayingState,
+        setShaderUniforms,
+        shaderRunners,
+        showLoadError,
+        showLoader,
+        updateCounter
+    };
+})();

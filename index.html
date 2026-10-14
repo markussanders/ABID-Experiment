@@ -1,50 +1,56 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta prefix="og: http://ogp.me/ns#" property='og:title' content='ABID-Experiment-I' />
-  <meta prefix="og: http://ogp.me/ns#" property='og:image' content="https://live.staticflickr.com/65535/50122786971_cf5f00d10a_k.jpg" />
-  <meta prefix="og: http://ogp.me/ns#" property='og:description' content='Audio-based Image Distortion Experiment #1' />
-  <meta prefix="og: http://ogp.me/ns#" property='og:url' content='https://markussanders.github.io/ABID-Experiment/' />
+  <meta name="description" content="Audio-based image distortion experiments by Markus Sanders.">
+  <meta name="theme-color" content="#050505">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ABID Experiment I">
+  <meta property="og:image" content="https://live.staticflickr.com/65535/50122786971_cf5f00d10a_k.jpg">
+  <meta property="og:description" content="Audio-based Image Distortion Experiment #1">
+  <meta property="og:url" content="https://markussanders.github.io/ABID-Experiment/">
   <title>ABID Experiment I</title>
-  <link rel="icon" type="icon/png" href="favicon.png" />
-  <link rel="stylesheet" type="text/css" href="style.css" />
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <div class="alert-screen">
-    <div class="alert-messages">
-      <h2 class="alert-message">This application does not support mobile usage or small screens.</h2>
-      <h3 class="alert-message">Please switch to a non-mobile device, or, if viewing from a computer, maximize your brower's window size.</h3>
+  <main id="experience" aria-label="Audio-based image distortion canvas">
+    <div class="overlay overlay-hidden" aria-live="polite">
+      <div class="control">
+        <span class="prompt">Sound on</span>
+        <span class="prompt">Arrow keys change image</span>
+        <span class="prompt">Space toggles audio</span>
+      </div>
+      <div class="counter">
+        <span id="count">1 / 8</span>
+        <span id="title"></span>
+      </div>
     </div>
-  </div>
-  <div class="overlay-hidden">
-    <div class="control">
-      <span class="prompt">Make sure your sound is on</span>
-      <span class="prompt"><em>Left</em> & <em>Right</em> arrows: Navigate</span>
-      <span class="prompt"><em>Spacebar</em>: Play/Pause Audio</span>
+
+    <div class="controls-bar controls-visible" aria-label="Playback controls">
+      <button class="control-button" type="button" data-action="previous" aria-label="Previous piece">Prev</button>
+      <button class="control-button control-button-primary" type="button" data-action="toggle" aria-label="Play or pause audio">Play</button>
+      <button class="control-button" type="button" data-action="next" aria-label="Next piece">Next</button>
     </div>
-    <div class="counter">
-      <span id="count">1 / 7</span>
-      <span id="title"></span>
+
+    <div class="loader-screen" role="status" aria-live="polite">
+      <h1 class="loader" aria-label="Loading">
+        <span>L</span>
+        <span>O</span>
+        <span>A</span>
+        <span>D</span>
+        <span>I</span>
+        <span>N</span>
+        <span>G</span>
+      </h1>
     </div>
-  </div>
-  <div class="loader-screen">
-    <h1 class="loader">
-      <span>L</span>
-      <span>O</span>
-      <span>A</span>
-      <span>D</span>
-      <span>I</span>
-      <span>N</span>
-      <span>G</span>
-    </h1>
-  </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>
-  <script language="javascript" src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/addons/p5.sound.min.js"></script>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/addons/p5.sound.min.js"></script>
   <script src="sketch.js"></script>
   <script src="helpers.js"></script>
 </body>
