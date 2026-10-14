@@ -1,15 +1,14 @@
 {
-    "name": "ABID-Experiment",
+    "name": "abid-experiment",
     "version": "1.0.0",
     "description": "Audio-Based Image Distortion Experiment",
     "main": "server.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "start": "node server.js",
+        "dev": "node server.js",
+        "test": "node --check server.js && node --check sketch.js && node --check helpers.js"
     },
     "author": "Markus Sanders",
     "license": "MIT",
-    "dependencies": {
-        "express": "^4.17.1",
-        "p5": "^1.0.0"
-    }
+    "private": true
 }
